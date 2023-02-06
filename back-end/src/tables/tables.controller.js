@@ -90,10 +90,17 @@ function validateCapacity(req, res, next) {
 }
 
 function tableOccupied(req, res, next) {
-  console.log(res.locals.table.reservation_id)
   const occupied = res.locals.table.reservation_id;
   if (occupied) {
     return next({ status: 400, message: "Error: table is occupied." });
+  }
+  return next();
+}
+
+function tableVacant(req, res, next) {
+  const occupied = res.locals.table.reservation_id;
+  if (!occupied) {
+    return next({ status: 400, message: "Error: table is not occupied by guests." });
   }
   return next();
 }
@@ -115,6 +122,12 @@ async function update(req, res, next) {
   res.json({ data });
 }
 
+async function finish(req, res, next){
+  const { table_id, reservation_id } = res.locals.table;
+  const data = await service.delete(table_id, reservation_id);
+  res.json({ data });
+}
+
 module.exports = {
   list: asyncErrorBoundary(list),
   create: [hasProperties, validate, asyncErrorBoundary(create)],
@@ -122,8 +135,13 @@ module.exports = {
     hasReservationId,
     asyncErrorBoundary(reservationExists),
     asyncErrorBoundary(tableExists),
-    asyncErrorBoundary(validateCapacity),
-    asyncErrorBoundary(tableOccupied),
+    validateCapacity,
+    tableOccupied,
     asyncErrorBoundary(update),
   ],
+  delete: [
+    asyncErrorBoundary(tableExists),
+    tableVacant,
+    asyncErrorBoundary(finish),
+  ]
 };
