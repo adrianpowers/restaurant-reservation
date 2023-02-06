@@ -3,16 +3,8 @@
  */
 const service = require("./reservations.service");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary");
-const P = require("pino");
 
-async function list(req, res, next) {
-  const today = new Date();
-  const { date = today } = req.query;
-  const reservations = await service.list(date);
-  res.json({
-    data: [...reservations],
-  });
-}
+// ! VALIDATORS
 
 function hasData(req, res, next) {
   const { data } = req.body;
@@ -56,7 +48,7 @@ function validateResDateAndTime(req, res, next) {
   const { reservation_date } = res.locals.data;
   const { reservation_time } = res.locals.data;
 
-    // * checks for date formatting
+  // * checks for date formatting
 
   const dateRegex = /\d{4}\-\d{2}\-\d{2}/;
   if (!dateRegex.test(reservation_date)) {
@@ -67,7 +59,7 @@ function validateResDateAndTime(req, res, next) {
     });
   }
 
-    // * checks for time formatting
+  // * checks for time formatting
 
   const timeRegex = /\d{2}\:\d{2}/;
   if (!timeRegex.test(reservation_time)) {
@@ -78,47 +70,82 @@ function validateResDateAndTime(req, res, next) {
     });
   }
 
-    // * checks for date and time in the past
+  // * checks for date and time in the past
 
-  let formattedDate = new Date(`${reservation_date}T${reservation_time}`)
+  let formattedDate = new Date(`${reservation_date}T${reservation_time}`);
 
-  if(Date.now() > Date.parse(formattedDate)) {
+  if (Date.now() > Date.parse(formattedDate)) {
     return next({
       status: 400,
       message: "Error: reservation must be made for a future date and time.",
     });
   }
 
-    // * checks for Tuesdays
+  // * checks for Tuesdays
 
-  if(formattedDate.toString().slice(0, 3) === "Tue"){
+  if (formattedDate.toString().slice(0, 3) === "Tue") {
     return next({
       status: 400,
-      message: "We're closed on Tuesdays - check our hours for more information!"
-    })
+      message:
+        "We're closed on Tuesdays - check our hours for more information!",
+    });
   }
 
-    // * checks for business hours
+  // * checks for business hours
 
   const hours = formattedDate.getHours();
   const minutes = formattedDate.getMinutes();
-  if(hours <= 10){
-    if(minutes <= 30){
-      return next({ status: 400, message: "We open at 10:30 AM - please fix your reservation accordingly." })
+  if (hours <= 10) {
+    if (minutes <= 30) {
+      return next({
+        status: 400,
+        message:
+          "We open at 10:30 AM - please fix your reservation accordingly.",
+      });
     }
   }
-  if(hours => 21){
-    if(minutes => 30){
-      return next({ status: 400, message: "Our last reservations are for 9:30 PM - please fix your reservation accordingly." })
+  if ((hours) => 21) {
+    if ((minutes) => 30) {
+      return next({
+        status: 400,
+        message:
+          "Our last reservations are for 9:30 PM - please fix your reservation accordingly.",
+      });
     }
   }
 
   return next();
 }
 
+async function reservationExists(req, res, next) {
+  const { reservation_id } = req.params;
+  const reservation = await service.read(reservation_id);
+  if (!reservation) {
+    return next({
+      status: 404,
+      message: `Reservation ${reservation_id} cannot be found.`,
+    });
+  }
+  res.locals.reservation = reservation;
+  return next();
+}
+
+async function list(req, res, next) {
+  const today = new Date().toISOString().slice(0, 10);;
+  let { date = today } = req.query;
+  const reservations = await service.list(date);
+  res.json({
+    data: [...reservations],
+  });
+}
+
 async function create(req, res, next) {
   const data = await service.create(res.locals.data);
   res.status(201).json({ data });
+}
+
+async function read(req, res, next) {
+  res.json({ data: res.locals.reservation });
 }
 
 module.exports = {
@@ -130,4 +157,5 @@ module.exports = {
     validateResDateAndTime,
     asyncErrorBoundary(create),
   ],
+  read: [asyncErrorBoundary(reservationExists), asyncErrorBoundary(read)],
 };
