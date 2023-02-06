@@ -56,7 +56,8 @@ function validateResDateAndTime(req, res, next) {
   const { reservation_date } = res.locals.data;
   const { reservation_time } = res.locals.data;
 
-  // * checks for date formatting
+    // * checks for date formatting
+
   const dateRegex = /\d{4}\-\d{2}\-\d{2}/;
   if (!dateRegex.test(reservation_date)) {
     return next({
@@ -66,7 +67,8 @@ function validateResDateAndTime(req, res, next) {
     });
   }
 
-  // * checks for time formatting
+    // * checks for time formatting
+
   const timeRegex = /\d{2}\:\d{2}/;
   if (!timeRegex.test(reservation_time)) {
     return next({
@@ -76,7 +78,7 @@ function validateResDateAndTime(req, res, next) {
     });
   }
 
-  // * checks for date and time in the past
+    // * checks for date and time in the past
 
   let formattedDate = new Date(`${reservation_date}T${reservation_time}`)
 
@@ -87,7 +89,7 @@ function validateResDateAndTime(req, res, next) {
     });
   }
 
-  // * checks for Tuesdays
+    // * checks for Tuesdays
 
   if(formattedDate.toString().slice(0, 3) === "Tue"){
     return next({
@@ -96,7 +98,8 @@ function validateResDateAndTime(req, res, next) {
     })
   }
 
-  // * checks for business hours
+    // * checks for business hours
+
   const hours = formattedDate.getHours();
   const minutes = formattedDate.getMinutes();
   if(hours <= 10){
