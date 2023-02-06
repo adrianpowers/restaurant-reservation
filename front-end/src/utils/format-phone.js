@@ -11,5 +11,8 @@ export default function formatPhone(num){
       "$1$2$3-$5$6$7-$8"
     );
   }
-  
+  num.value = num.value.replace(
+    /(\d)(\d)(\d)(\d)(\d)(\d)(\d)(\d)(\d)(\d)/,
+    "$1$2$3-$4$5$6-$7$8$9$10"
+  );
 }

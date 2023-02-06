@@ -3,6 +3,7 @@ import { listReservations } from "../utils/api";
 import { today } from "../utils/date-time";
 import ErrorAlert from "../layout/ErrorAlert";
 import DateButtons from "./DateButtons";
+import ReservationBlock from "./ReservationBlock";
 
 /**
  * Defines the dashboard page.
@@ -25,15 +26,22 @@ function Dashboard({ date = today }) {
     return () => abortController.abort();
   }
 
+  const allReservations = reservations.map(res => {
+    return <ReservationBlock
+      key={res.reservation_id}
+      reservation={res}
+    />
+  })
+
   return (
     <main>
       <h1>Dashboard</h1>
       <div className="d-md-flex mb-3">
-        <h4 className="mb-0">Reservations for date</h4>
+        <h4 className="mb-0">Reservations for {date}:</h4>
       </div>
       <DateButtons date={date}/>
+      {allReservations}
       <ErrorAlert error={reservationsError} />
-      {JSON.stringify(reservations)}
     </main>
   );
 }
