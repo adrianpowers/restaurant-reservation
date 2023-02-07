@@ -89,6 +89,17 @@ function validateCapacity(req, res, next) {
   return next();
 }
 
+function validateStatus(req, res, next){
+  const { status } = res.locals.reservation;
+  if(status === "seated"){
+    return next({ 
+      status: 400,
+      message: "Error: reservation has already been seated."
+    });
+  }
+  return next();
+}
+
 function tableOccupied(req, res, next) {
   const occupied = res.locals.table.reservation_id;
   if (occupied) {
@@ -100,7 +111,7 @@ function tableOccupied(req, res, next) {
 function tableVacant(req, res, next) {
   const occupied = res.locals.table.reservation_id;
   if (!occupied) {
-    return next({ status: 400, message: "Error: table is not occupied by guests." });
+    return next({ status: 400, message: "Error: table is currently not occupied by guests." });
   }
   return next();
 }
@@ -136,6 +147,7 @@ module.exports = {
     asyncErrorBoundary(reservationExists),
     asyncErrorBoundary(tableExists),
     validateCapacity,
+    validateStatus,
     tableOccupied,
     asyncErrorBoundary(update),
   ],

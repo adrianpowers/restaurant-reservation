@@ -32,12 +32,12 @@ function hasProperties(req, res, next) {
       });
     }
   });
-  res.locals.data = data;
+  res.locals.reservation = data;
   return next();
 }
 
 function validatePeople(req, res, next) {
-  const { people } = res.locals.data;
+  const { people } = res.locals.reservation;
   if (typeof people !== "number") {
     return next({ status: 400, message: "Error: people must be a number." });
   }
@@ -45,8 +45,8 @@ function validatePeople(req, res, next) {
 }
 
 function validateResDateAndTime(req, res, next) {
-  const { reservation_date } = res.locals.data;
-  const { reservation_time } = res.locals.data;
+  const { reservation_date } = res.locals.reservation;
+  const { reservation_time } = res.locals.reservation;
 
   // * checks for date formatting
 
@@ -55,7 +55,7 @@ function validateResDateAndTime(req, res, next) {
     return next({
       status: 400,
       message:
-        "Error: reservation date must be a valid date. Use the format: YYYY-MM-DD.",
+        "Error: reservation_date must be a valid date. Use the format: YYYY-MM-DD.",
     });
   }
 
@@ -66,7 +66,7 @@ function validateResDateAndTime(req, res, next) {
     return next({
       status: 400,
       message:
-        "Error: reservation time must be a valid time. Use the format: HH:MM:SS.",
+        "Error: reservation_time must be a valid time. Use the format: HH:MM:SS.",
     });
   }
 
@@ -104,8 +104,8 @@ function validateResDateAndTime(req, res, next) {
       });
     }
   }
-  if ((hours) => 21) {
-    if ((minutes) => 30) {
+  if (hours >= 21) {
+    if (minutes >= 30) {
       return next({
         status: 400,
         message:
@@ -130,22 +130,90 @@ async function reservationExists(req, res, next) {
   return next();
 }
 
+function validateStatus(req, res, next) {
+  const options = ["booked", "seated", "finished", "cancelled"];
+  const { status } = req.body.data;
+  if (!options.includes(status)) {
+    return next({
+      status: 400,
+      message:
+        "Error: unknown status; must be one of the following: booked, seated, or finished.",
+    });
+  }
+  res.locals.status = status;
+  return next();
+}
+
+function validateFinished(req, res, next) {
+  const { status } = res.locals.reservation;
+  if (status === "finished") {
+    return next({
+      status: 400,
+      message: "Error: cannot change a finished reservation.",
+    });
+  }
+  return next();
+}
+
+function validateBooked(req, res, next) {
+  const { status } = res.locals.reservation;
+  if (status && status !== "booked") {
+    return next({
+      status: 400,
+      message: `Error: cannot book reservation with status of ${status}. Initial status must be "booked".`,
+    });
+  }
+  return next();
+}
+
+function validateUpdate(req, res, next){
+  const { status } = res.locals.reservation;
+  if(status !== "booked") {
+    return next({
+      status: 400,
+      message: "Error: can only update reservation with a status of 'booked.'"
+    })
+  }
+  return next();
+}
+
 async function list(req, res, next) {
-  const today = new Date().toISOString().slice(0, 10);;
-  let { date = today } = req.query;
-  const reservations = await service.list(date);
+  const today = new Date().toISOString().slice(0, 10);
+  let { date = today, mobile_number } = req.query;
+  let reservations = null;
+  if (mobile_number) {
+    reservations = await service.search(mobile_number);
+  } else {
+    reservations = await service.list(date);
+  }
   res.json({
     data: [...reservations],
   });
 }
 
 async function create(req, res, next) {
-  const data = await service.create(res.locals.data);
+  const data = await service.create(res.locals.reservation);
   res.status(201).json({ data });
 }
 
 async function read(req, res, next) {
   res.json({ data: res.locals.reservation });
+}
+
+async function status(req, res, next) {
+  const { reservation, status } = res.locals;
+  const data = await service.status(reservation, status);
+  res.json({ data });
+}
+
+async function update(req, res, next) {
+  const { reservation_id } = res.locals.reservation;
+  const reservation = req.body.data;
+  let data = await service.update(reservation_id, reservation)
+  if(res.locals.reservation.status !== reservation.status){
+    data = await service.status(data, data.status);
+  }
+  res.json({ data });
 }
 
 module.exports = {
@@ -155,7 +223,23 @@ module.exports = {
     hasProperties,
     validatePeople,
     validateResDateAndTime,
+    validateBooked,
     asyncErrorBoundary(create),
   ],
   read: [asyncErrorBoundary(reservationExists), asyncErrorBoundary(read)],
+  status: [
+    asyncErrorBoundary(reservationExists),
+    validateStatus,
+    validateFinished,
+    asyncErrorBoundary(status),
+  ],
+  update: [
+    asyncErrorBoundary(reservationExists),
+    hasData,
+    hasProperties,
+    validatePeople,
+    validateResDateAndTime,
+    validateUpdate,
+    asyncErrorBoundary(update)
+  ],
 };
