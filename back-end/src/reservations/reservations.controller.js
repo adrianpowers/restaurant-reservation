@@ -41,6 +41,9 @@ function validatePeople(req, res, next) {
   if (typeof people !== "number") {
     return next({ status: 400, message: "Error: people must be a number." });
   }
+  if (people < 1) {
+    return next({ status: 400, message: "Error: you must have at least one guest."})
+  }
   return next();
 }
 
@@ -95,25 +98,24 @@ function validateResDateAndTime(req, res, next) {
 
   const hours = formattedDate.getHours();
   const minutes = formattedDate.getMinutes();
-  if (hours <= 10) {
-    if (minutes <= 30) {
-      return next({
-        status: 400,
-        message:
-          "We open at 10:30 AM - please fix your reservation accordingly.",
-      });
-    }
-  }
-  if (hours >= 21) {
-    if (minutes >= 30) {
-      return next({
-        status: 400,
-        message:
-          "Our last reservations are for 9:30 PM - please fix your reservation accordingly.",
-      });
-    }
-  }
 
+  if(hours <= 10 && minutes <= 30 || hours <= 9){
+    return next({
+      status: 400,
+      message:
+        "We open at 10:30 AM - please fix your reservation accordingly.",
+    });
+  }
+  
+
+  if (hours >= 21 && minutes >= 30 || hours >= 22) {
+    return next({
+      status: 400,
+      message:
+        "Our last reservations are for 9:30 PM - please fix your reservation accordingly.",
+    });
+  }
+  
   return next();
 }
 
@@ -166,13 +168,13 @@ function validateBooked(req, res, next) {
   return next();
 }
 
-function validateUpdate(req, res, next){
+function validateUpdate(req, res, next) {
   const { status } = res.locals.reservation;
-  if(status !== "booked") {
+  if (status !== "booked") {
     return next({
       status: 400,
-      message: "Error: can only update reservation with a status of 'booked.'"
-    })
+      message: "Error: can only update reservation with a status of 'booked.'",
+    });
   }
   return next();
 }
@@ -209,8 +211,8 @@ async function status(req, res, next) {
 async function update(req, res, next) {
   const { reservation_id } = res.locals.reservation;
   const reservation = req.body.data;
-  let data = await service.update(reservation_id, reservation)
-  if(res.locals.reservation.status !== reservation.status){
+  let data = await service.update(reservation_id, reservation);
+  if (res.locals.reservation.status !== reservation.status) {
     data = await service.status(data, data.status);
   }
   res.json({ data });
@@ -219,27 +221,27 @@ async function update(req, res, next) {
 module.exports = {
   list: asyncErrorBoundary(list),
   create: [
-    hasData,
-    hasProperties,
-    validatePeople,
-    validateResDateAndTime,
-    validateBooked,
+    asyncErrorBoundary(hasData),
+    asyncErrorBoundary(hasProperties),
+    asyncErrorBoundary(validatePeople),
+    asyncErrorBoundary(validateResDateAndTime),
+    asyncErrorBoundary(validateBooked),
     asyncErrorBoundary(create),
   ],
   read: [asyncErrorBoundary(reservationExists), asyncErrorBoundary(read)],
   status: [
     asyncErrorBoundary(reservationExists),
-    validateStatus,
-    validateFinished,
+    asyncErrorBoundary(validateStatus),
+    asyncErrorBoundary(validateFinished),
     asyncErrorBoundary(status),
   ],
   update: [
     asyncErrorBoundary(reservationExists),
-    hasData,
-    hasProperties,
-    validatePeople,
-    validateResDateAndTime,
-    validateUpdate,
-    asyncErrorBoundary(update)
+    asyncErrorBoundary(hasData),
+    asyncErrorBoundary(hasProperties),
+    asyncErrorBoundary(validatePeople),
+    asyncErrorBoundary(validateResDateAndTime),
+    asyncErrorBoundary(validateUpdate),
+    asyncErrorBoundary(update),
   ],
 };

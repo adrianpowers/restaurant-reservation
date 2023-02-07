@@ -1,6 +1,5 @@
 export default function ReservationBlock({ reservation }){
   const {
-    reservation_id,
     first_name,
     last_name,
     reservation_time,
