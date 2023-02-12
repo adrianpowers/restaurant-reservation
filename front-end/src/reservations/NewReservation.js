@@ -90,6 +90,7 @@ export default function NewReservation() {
     if (errors.length === 0) {
       await createReservation(formData, ac.signal);
     }
+    
     history.push(`/dashboard?date=${formData.reservation_date}`);
 
     setFormData({ ...initialFormState });

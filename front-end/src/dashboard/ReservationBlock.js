@@ -1,36 +1,40 @@
-export default function ReservationBlock({ reservation }){
+export default function ReservationBlock({ reservation }) {
   const {
     first_name,
     last_name,
     reservation_time,
     people,
     mobile_number,
-    status
+    status,
+    reservation_id,
   } = reservation;
 
-  const statusButton = 
+  const statusButton =
     status === "booked" ? (
-      <div className="btn btn-primary">
-        Booked
-      </div>
+      <div className="btn btn-primary ml-4 mr-2 my-2">Booked</div>
     ) : status === "seated" ? (
-      <div className="btn btn-success"> 
-        Seated
-      </div>
+      <div className="btn btn-success ml-4 mr-2 my-2">Seated</div>
     ) : status === "cancelled" ? (
-      <div className="btn btn-warning">
-        Cancelled
-      </div>
+      <div className="btn btn-warning ml-4 mr-2 my-2">Cancelled</div>
     ) : (
-      <div className="btn btn-secondary">
-        Finished
-      </div>
-  )
+      <div className="btn btn-secondary ml-4 mr-2 my-2">Finished</div>
+    );
+
+  const seatButton = (
+    <div className="btn btn-primary mr-2 my-2">
+      <a href={`reservations/${reservation_id}/seat`}>Seat</a>
+    </div>
+  );
 
   return (
-    <div className="card" style={{width: '16rem', }}>
+    <div className="card">
       <div className="card-body">
-        <h5 className="card-title"><b>{first_name} {last_name}</b>: {reservation_time}</h5>
+        <h5 className="card-title">
+          <b>
+            {first_name} {last_name}
+          </b>
+          : {reservation_time}
+        </h5>
       </div>
       <ul className="list-group list-group-flush">
         <li className="list-group-item">
@@ -40,7 +44,10 @@ export default function ReservationBlock({ reservation }){
           <b>Number of Guests:</b> {people}
         </li>
       </ul>
-      {statusButton}
+      <div className="row">
+        {statusButton}
+        {seatButton}
+      </div>
     </div>
-  )
+  );
 }
