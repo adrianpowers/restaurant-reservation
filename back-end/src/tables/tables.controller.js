@@ -42,11 +42,15 @@ function validate(req, res, next) {
 
 function hasReservationId(req, res, next) {
   const { data = {} } = req.body;
-  if (!data.reservation_id) {
-    return next({
-      status: 400,
-      message: "Error: please include reservation_id to be seated.",
-    });
+  try {
+    if (!data.reservation_id) {
+      return next({
+        status: 400,
+        message: "Error: please include reservation_id to be seated.",
+      });
+    }
+  } catch (e) {
+    console.log(e);
   }
   res.locals.data = data;
   return next();
@@ -67,11 +71,11 @@ async function reservationExists(req, res, next) {
 
 async function tableExists(req, res, next) {
   const table = await service.read(req.params.table_id);
-  if(!table){
+  if (!table) {
     return next({
       status: 404,
-      message: `Table ${req.params.table_id} cannot be found.`
-    })
+      message: `Table ${req.params.table_id} cannot be found.`,
+    });
   }
   res.locals.table = table;
   return next();
@@ -80,21 +84,21 @@ async function tableExists(req, res, next) {
 function validateCapacity(req, res, next) {
   const { people } = res.locals.reservation;
   const { capacity } = res.locals.table;
-  if(people > capacity){
+  if (people > capacity) {
     return next({
-       status: 400,
-       message: "Error: this table has insufficient capacity!"
-    })
+      status: 400,
+      message: "Error: this table has insufficient capacity!",
+    });
   }
   return next();
 }
 
-function validateStatus(req, res, next){
+function validateStatus(req, res, next) {
   const { status } = res.locals.reservation;
-  if(status === "seated"){
-    return next({ 
+  if (status === "seated") {
+    return next({
       status: 400,
-      message: "Error: reservation has already been seated."
+      message: "Error: reservation has already been seated.",
     });
   }
   return next();
@@ -111,7 +115,10 @@ function tableOccupied(req, res, next) {
 function tableVacant(req, res, next) {
   const occupied = res.locals.table.reservation_id;
   if (!occupied) {
-    return next({ status: 400, message: "Error: table is currently not occupied by guests." });
+    return next({
+      status: 400,
+      message: "Error: table is currently not occupied by guests.",
+    });
   }
   return next();
 }
@@ -133,7 +140,7 @@ async function update(req, res, next) {
   res.json({ data });
 }
 
-async function finish(req, res, next){
+async function finish(req, res, next) {
   const { table_id, reservation_id } = res.locals.table;
   const data = await service.delete(table_id, reservation_id);
   res.json({ data });
@@ -141,19 +148,23 @@ async function finish(req, res, next){
 
 module.exports = {
   list: asyncErrorBoundary(list),
-  create: [hasProperties, validate, asyncErrorBoundary(create)],
+  create: [
+    asyncErrorBoundary(hasProperties),
+    asyncErrorBoundary(validate),
+    asyncErrorBoundary(create),
+  ],
   update: [
-    hasReservationId,
+    asyncErrorBoundary(hasReservationId),
     asyncErrorBoundary(reservationExists),
     asyncErrorBoundary(tableExists),
-    validateCapacity,
-    validateStatus,
-    tableOccupied,
+    asyncErrorBoundary(validateCapacity),
+    asyncErrorBoundary(validateStatus),
+    asyncErrorBoundary(tableOccupied),
     asyncErrorBoundary(update),
   ],
   delete: [
     asyncErrorBoundary(tableExists),
-    tableVacant,
+    asyncErrorBoundary(tableVacant),
     asyncErrorBoundary(finish),
-  ]
+  ],
 };

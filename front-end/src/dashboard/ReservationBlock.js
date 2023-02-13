@@ -21,9 +21,13 @@ export default function ReservationBlock({ reservation }) {
     );
 
   const seatButton = (
-    <div className="btn btn-primary mr-2 my-2">
-      <a href={`reservations/${reservation_id}/seat`}>Seat</a>
-    </div>
+    <a
+      href={`/reservations/${reservation_id}/seat`}
+      role="button"
+      className="btn btn-primary my-2"
+    >
+      Seat
+    </a>
   );
 
   return (
@@ -46,7 +50,7 @@ export default function ReservationBlock({ reservation }) {
       </ul>
       <div className="row">
         {statusButton}
-        {seatButton}
+        {status === "booked" ? seatButton : null}
       </div>
     </div>
   );
