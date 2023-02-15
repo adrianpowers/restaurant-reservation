@@ -1,5 +1,5 @@
 import React from "react";
-
+import "./Layout.css";
 import { Link } from "react-router-dom";
 
 /**
@@ -16,31 +16,31 @@ function Menu() {
           className="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0"
           to="/"
         >
-          <div className="sidebar-brand-text mx-3">
+          <div className="header-text sidebar-brand-text mx-3">
             <span>Periodic Tables</span>
           </div>
         </Link>
         <hr className="sidebar-divider my-0" />
         <ul className="nav navbar-nav text-light" id="accordionSidebar">
-          <li className="nav-item">
+          <li className="sidebar-item-text nav-item">
             <Link className="nav-link" to="/dashboard">
               <span className="oi oi-dashboard" />
               &nbsp;Dashboard
             </Link>
           </li>
-          <li className="nav-item">
+          <li className="sidebar-item-text nav-item">
             <Link className="nav-link" to="/search">
               <span className="oi oi-magnifying-glass" />
               &nbsp;Search
             </Link>
           </li>
-          <li className="nav-item">
+          <li className="sidebar-item-text nav-item">
             <Link className="nav-link" to="/reservations/new">
               <span className="oi oi-plus" />
               &nbsp;New Reservation
             </Link>
           </li>
-          <li className="nav-item">
+          <li className="sidebar-item-text nav-item">
             <Link className="nav-link" to="/tables/new">
               <span className="oi oi-layers" />
               &nbsp;New Table

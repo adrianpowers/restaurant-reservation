@@ -1,4 +1,18 @@
 .side-bar {
-  background-color: #393a44;
-  min-width: 200px;
+  background-color: #9D3C3D;
+  min-width: 260px;
+}
+
+.header-text {
+  font-family: 'Oswald', sans-serif;
+  font-size: 40px;
+}
+
+.sidebar-item-text {
+  font-family: 'Oswald', sans-serif;
+  font-size: 20px;
+}
+
+body {
+  background-color: "84C9E4";
 }

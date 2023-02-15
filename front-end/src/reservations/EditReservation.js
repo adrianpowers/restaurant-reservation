@@ -1,13 +1,15 @@
-import { useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useHistory } from "react-router-dom"; 
+import { useParams } from "react-router";
+import { updateReservation, readReservation } from "../utils/api";
+import formatPhone from "../utils/format-phone";
 import ReservationForm from "./ReservationForm";
 import ErrorAlert from "../layout/ErrorAlert";
-import { createReservation } from "../utils/api";
-import formatPhone from "../utils/format-phone";
 
-export default function NewReservation() {
+export default function EditReservation(){
   const history = useHistory();
-
+  const { reservation_id } = useParams();
+  
   const initialFormState = {
     first_name: "",
     last_name: "",
@@ -15,10 +17,22 @@ export default function NewReservation() {
     reservation_date: "",
     reservation_time: "",
     people: 1,
-  };
-
+  }
+  
   const [formData, setFormData] = useState({ ...initialFormState });
   const [errors, setErrors] = useState([]);
+
+  useEffect(() => {
+    async function loadRes() {
+      const ac = new AbortController();
+      const res = await readReservation(reservation_id, ac.signal);
+      setFormData({ ...res })
+      return () => ac.abort();
+    }
+    loadRes();
+  }, [reservation_id])
+
+  const validationErrors = [];
 
   const handleChange = (event) => {
     if (event.target.name === "mobile_number") {
@@ -29,8 +43,6 @@ export default function NewReservation() {
       [event.target.name]: event.target.value,
     });
   };
-
-  const validationErrors = [];
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -86,7 +98,7 @@ export default function NewReservation() {
     setErrors(validationErrors);
 
     if (errors.length === 0) {
-      await createReservation(formData, ac.signal);
+      await updateReservation(formData, reservation_id, ac.signal);
     }
     
     history.push(`/dashboard?date=${formData.reservation_date}`);
@@ -103,7 +115,7 @@ export default function NewReservation() {
   return (
     <>
       <div>
-        <h1 className="my-3 text-center">Reserve Your Table Now!</h1>
+        <h1 className="my-3 text-center">Edit Your Reservation:</h1>
       </div>
       {errorsElement}
       <ReservationForm
