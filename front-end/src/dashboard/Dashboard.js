@@ -45,13 +45,20 @@ function Dashboard({ date = today }) {
       <div className="header-container my-3 p-3">
         <h1 className="text-center">Dashboard</h1>
       </div>
-      <div className="d-md-flex mb-3">
-        <h2 className="mb-0">Reservations for {date}:</h2>
-      </div>
       <DateButtons date={date} />
       <div className="container d-flex justify-content-start">
-        <div className="ml-0">{allReservations}</div>
-        <div className="ml-3">{allTables}</div>
+        <div className="col">
+          <div className="d-md-flex mb-3">
+            <h2 className="mb-0">Reservations for {date}:</h2>
+          </div>
+          <div className="ml-0">{allReservations}</div>
+        </div>
+        <div className="col">
+          <div className="d-md-flex mb-3">
+            <h2 className="mb-0">Table Availability:</h2>
+          </div>
+          <div className="ml-3">{allTables}</div>
+        </div>
       </div>
       <ErrorAlert error={reservationsError} />
       <ErrorAlert error={tablesError} />
