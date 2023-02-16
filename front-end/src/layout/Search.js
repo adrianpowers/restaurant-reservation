@@ -3,6 +3,7 @@ import { listReservations } from "../utils/api"
 import ReservationBlock from "../dashboard/ReservationBlock";
 import formatPhone from "../utils/format-phone";
 import ErrorAlert from "./ErrorAlert";
+import "./Search.css"
 
 export default function Search(){
   const initialFormState = {
@@ -37,7 +38,12 @@ export default function Search(){
   });
 
   const reservationsList = reservations.map(res => {
-    return <ReservationBlock key={res.reservation_id} reservation={res} />
+    return (
+      <>
+        <ReservationBlock key={res.reservation_id} reservation={res} />
+        <br />
+      </>
+    )
   });
 
   let results = null;
@@ -54,24 +60,28 @@ export default function Search(){
 
   return (
     <>
-      <h5>Search by Mobile Number</h5>
-      {errors ? displayErrors : null}
-      <div className="d-flex">
-        <form className="d-flex" onSubmit={handleSubmit}>
-          <input
-            required
-            type="tel"
-            placeholder="Enter Mobile Number"
-            onChange={handleChange}
-            value={formData.mobile_number}
-            className="form-control"
-            name="mobile_number"></input>
-          <button className="btn btn-primary ml-2" type="submit">
-            Search
-          </button>
-        </form>
+      <div className="d-flex flex-column text-center my-3">
+        <h2>Search by Mobile Number</h2>
+        {errors ? displayErrors : null}
+        <div>
+          <form className="d-flex" onSubmit={handleSubmit}>
+            <input
+              required
+              type="tel"
+              placeholder="Enter Mobile Number"
+              onChange={handleChange}
+              value={formData.mobile_number}
+              className="form-control my-3"
+              name="mobile_number"></input>
+            <button className="btn btn-primary ml-2 my-3" type="submit">
+              Search
+            </button>
+          </form>
+        </div>
       </div>
-      {results}
+      <div className="col-lg-6 col-md-8 col-12">
+        {results}
+      </div>
     </>
   )
 }
